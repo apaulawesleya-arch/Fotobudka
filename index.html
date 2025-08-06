@@ -39,6 +39,7 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      margin: 0.5em;
     }
     button:hover {
       background-color: #d81b60;
@@ -60,27 +61,66 @@
   <video id="video" autoplay playsinline></video>
   <br>
   <button onclick="takePhoto()">📸 Zrób zdjęcie</button>
+  <button onclick="switchCamera()">🔄 Przełącz kamerę</button>
+  <button onclick="toggleFlash()">💡 Lampa: <span id="flashStatus">OFF</span></button>
+
   <canvas id="canvas" width="400" height="300"></canvas>
   <br>
   <a id="downloadLink">📥 Pobierz zdjęcie</a>
+  <br>
+  <button onclick="goToForm()">📤 Prześlij zdjęcie do formularza</button>
 
   <script>
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const downloadLink = document.getElementById('downloadLink');
+    const flashStatus = document.getElementById('flashStatus');
 
-    // Włącz kamerę
-    async function initCamera() {
+    let currentStream;
+    let currentCamera = 'environment';
+    let flashOn = false;
+
+    async function startCamera() {
+      if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+      }
+
+      const constraints = {
+        video: {
+          facingMode: currentCamera,
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      };
+
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        video.srcObject = stream;
+        currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = currentStream;
+        await video.play();
       } catch (err) {
         alert("Nie udało się uzyskać dostępu do kamery 😢");
         console.error(err);
       }
     }
 
-    // Robienie zdjęcia
+    function switchCamera() {
+      currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
+      startCamera();
+    }
+
+    function toggleFlash() {
+      const videoTrack = currentStream?.getVideoTracks()[0];
+      const capabilities = videoTrack?.getCapabilities?.();
+      if (!capabilities || !capabilities.torch) {
+        alert("Twoje urządzenie nie obsługuje lampy błyskowej");
+        return;
+      }
+
+      flashOn = !flashOn;
+      videoTrack.applyConstraints({ advanced: [{ torch: flashOn }] });
+      flashStatus.textContent = flashOn ? 'ON' : 'OFF';
+    }
+
     function takePhoto() {
       const context = canvas.getContext('2d');
       canvas.style.display = 'block';
@@ -92,8 +132,11 @@
       downloadLink.style.display = 'inline-block';
     }
 
-    // Uruchom kamerę po załadowaniu strony
-    window.addEventListener('load', initCamera);
+    function goToForm() {
+      window.open("https://docs.google.com/forms/d/e/1FAIpQLSdJdysTEt9T6D6xpV8Pttmb2sHyH3wyPmZdgGiWTvn1DU-V7g/viewform", "_blank");
+    }
+
+    window.addEventListener('load', startCamera);
   </script>
 </body>
 </html>
