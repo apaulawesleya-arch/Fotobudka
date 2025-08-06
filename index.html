@@ -1,2 +1,72 @@
-<details>
-<summary>Kliknij, aby rozwinąć kod HTML</summary>
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ania & Damian – Weselna Fotobudka</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background-color: #fff0f5;
+      padding: 2em;
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 0.5em;
+    }
+    p {
+      font-size: 1.2em;
+      margin-bottom: 1.5em;
+    }
+    video, canvas {
+      display: block;
+      margin: 1em auto;
+      max-width: 100%;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1.1em;
+      background-color: #e91e63;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #d81b60;
+    }
+  </style>
+</head>
+<body>
+  <h1>Ania & Damian – Weselna Fotobudka 📸</h1>
+  <p>Zrób zdjęcie i podziel się nim z nami! 🕊️</p>
+
+  <video id="video" width="320" height="240" autoplay></video>
+  <button onclick="takePhoto()">📸 Zrób zdjęcie</button>
+  <canvas id="canvas" width="320" height="240" style="display: none;"></canvas>
+  <a id="downloadLink" style="display: none;">Pobierz zdjęcie</a>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const downloadLink = document.getElementById('downloadLink');
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      });
+
+    function takePhoto() {
+      const context = canvas.getContext('2d');
+      canvas.style.display = 'block';
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/png');
+      downloadLink.href = dataUrl;
+      downloadLink.download = 'fotobudka.png';
+      downloadLink.innerText = '📥 Pobierz zdjęcie';
+      downloadLink.style.display = 'inline-block';
+    }
+  </script>
+</body>
+</html>
