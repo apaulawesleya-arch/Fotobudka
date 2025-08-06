@@ -6,35 +6,50 @@
   <title>Ania & Damian – Weselna Fotobudka</title>
   <style>
     body {
-      font-family: sans-serif;
+      font-family: Arial, sans-serif;
       text-align: center;
       background-color: #fff0f5;
       padding: 2em;
     }
     h1 {
       font-size: 2em;
-      margin-bottom: 0.5em;
+      margin-bottom: 0.3em;
     }
     p {
       font-size: 1.2em;
       margin-bottom: 1.5em;
     }
-    video, canvas {
-      display: block;
-      margin: 1em auto;
-      max-width: 100%;
+    video {
+      border: 4px solid #e91e63;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      height: auto;
+      margin-bottom: 1em;
+    }
+    canvas {
+      display: none;
+      margin-top: 1em;
     }
     button {
-      padding: 10px 20px;
+      padding: 12px 25px;
       font-size: 1.1em;
       background-color: #e91e63;
       color: white;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
     }
     button:hover {
       background-color: #d81b60;
+    }
+    #downloadLink {
+      display: none;
+      margin-top: 1em;
+      font-size: 1.1em;
+      text-decoration: none;
+      color: #e91e63;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -42,31 +57,43 @@
   <h1>Ania & Damian – Weselna Fotobudka 📸</h1>
   <p>Zrób zdjęcie i podziel się nim z nami! 🕊️</p>
 
-  <video id="video" width="320" height="240" autoplay></video>
+  <video id="video" autoplay playsinline></video>
+  <br>
   <button onclick="takePhoto()">📸 Zrób zdjęcie</button>
-  <canvas id="canvas" width="320" height="240" style="display: none;"></canvas>
-  <a id="downloadLink" style="display: none;">Pobierz zdjęcie</a>
+  <canvas id="canvas" width="400" height="300"></canvas>
+  <br>
+  <a id="downloadLink">📥 Pobierz zdjęcie</a>
 
   <script>
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const downloadLink = document.getElementById('downloadLink');
 
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => {
+    // Włącz kamerę
+    async function initCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         video.srcObject = stream;
-      });
+      } catch (err) {
+        alert("Nie udało się uzyskać dostępu do kamery 😢");
+        console.error(err);
+      }
+    }
 
+    // Robienie zdjęcia
     function takePhoto() {
       const context = canvas.getContext('2d');
       canvas.style.display = 'block';
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
       const dataUrl = canvas.toDataURL('image/png');
       downloadLink.href = dataUrl;
       downloadLink.download = 'fotobudka.png';
-      downloadLink.innerText = '📥 Pobierz zdjęcie';
       downloadLink.style.display = 'inline-block';
     }
+
+    // Uruchom kamerę po załadowaniu strony
+    window.addEventListener('load', initCamera);
   </script>
 </body>
 </html>
