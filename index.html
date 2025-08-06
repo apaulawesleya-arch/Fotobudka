@@ -124,7 +124,13 @@
     function takePhoto() {
       const context = canvas.getContext('2d');
       canvas.style.display = 'block';
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+// Ustawiamy proporcje kamery
+canvas.width = video.videoWidth;
+canvas.height = video.videoHeight;
+
+// Rysujemy zdjęcie w pełnej jakości
+context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       const dataUrl = canvas.toDataURL('image/png');
       downloadLink.href = dataUrl;
