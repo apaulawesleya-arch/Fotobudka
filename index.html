@@ -195,11 +195,12 @@ function uploadPhoto() {
     })
   })
 .then(result => {
-  if(result.trim() === 'OK'){
+  const resStr = String(result).trim();
+  if (resStr === 'OK') {
     alert('🚀 Zdjęcie zostało zapisane!');
     uploadPhotoBtn.textContent = '✅ Wysłano';
   } else {
-    alert('❌ Błąd zapisu zdjęcia: ' + result);
+    alert('❌ Błąd zapisu zdjęcia: ' + resStr);
     uploadPhotoBtn.textContent = '🚀 Prześlij zdjęcie';
     uploadPhotoBtn.disabled = false;
   }
