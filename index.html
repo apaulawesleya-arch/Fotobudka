@@ -194,7 +194,7 @@ function uploadPhoto() {
       filename: 'fotobudka_' + Date.now() + '.jpg'
     })
   })
- .then(result => {
+.then(result => {
   if(result.trim() === 'OK'){
     alert('🚀 Zdjęcie zostało zapisane!');
     uploadPhotoBtn.textContent = '✅ Wysłano';
