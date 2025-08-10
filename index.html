@@ -6,20 +6,31 @@
 <title>Ania&Damian weselna fotobudka</title>
 <style>
   body {
-    font-family: Arial, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     text-align: center;
     margin: 20px;
-    background: #f9e0e7; /* delikatny róż */
+    background: #f9e0e7;
     color: #333;
+  }
+  h1 {
+    color: #d6336c;
+    margin-bottom: 5px;
+  }
+  p {
+    font-size: 1.2rem;
+    margin-top: 0;
+    margin-bottom: 20px;
   }
   video, #photo {
     width: auto;
     max-width: 90vw;
     max-height: 80vh;
-    border: 2px solid #333;
-    border-radius: 8px;
+    border: 3px solid #d6336c;
+    border-radius: 12px;
     object-fit: contain;
-    transform: scaleX(-1); /* lustrzane odbicie */
+    transform: scaleX(-1);
+    box-shadow: 0 4px 10px rgba(214, 51, 108, 0.4);
+    transition: all 0.3s ease;
   }
   #photo {
     margin-top: 20px;
@@ -28,30 +39,45 @@
   button {
     margin: 15px 10px 0 10px;
     font-size: 18px;
-    padding: 10px 25px;
+    padding: 12px 30px;
     cursor: pointer;
     border: none;
-    border-radius: 8px;
-    background-color: #ff6699;
+    border-radius: 30px;
+    background-color: #d6336c;
     color: white;
-    transition: background-color 0.3s ease;
+    font-weight: 600;
+    box-shadow: 0 4px 8px rgba(214, 51, 108, 0.6);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    user-select: none;
   }
-  button:hover {
-    background-color: #e05585;
+  button:disabled {
+    background-color: #f1cdd9;
+    box-shadow: none;
+    cursor: not-allowed;
+    color: #a07a8e;
+  }
+  button:hover:not(:disabled) {
+    background-color: #b42b57;
+    box-shadow: 0 6px 12px rgba(180, 43, 87, 0.8);
+  }
+  #buttonsContainer {
+    margin-top: 20px;
   }
 </style>
 </head>
 <body>
 <h1>Ania&amp;Damian weselna fotobudka</h1>
-<p>Zrób zdjęcie i podziel się nim z nami! 🕊️</p>
+<p>Zrób zdjęcie i podziel się nim z nami! 🕊️📸</p>
 
 <video id="video" autoplay playsinline></video>
 <img id="photo" alt="Twoje zdjęcie" />
 
-<br/>
-<button id="switchCamera">Przełącz kamerę</button>
-<button id="takePhoto">Zrób zdjęcie</button>
-<button id="retakePhoto" style="display:none;">Zrób ponownie</button>
+<div id="buttonsContainer">
+  <button id="switchCamera" title="Przełącz kamerę">🔄 Przełącz kamerę</button>
+  <button id="takePhoto">📷 Zrób zdjęcie</button>
+  <button id="retakePhoto" style="display:none;">🔄 Zrób ponownie</button>
+  <button id="uploadPhoto" style="display:none;" disabled>🚀 Prześlij zdjęcie</button>
+</div>
 
 <canvas id="canvas" style="display:none;"></canvas>
 
@@ -62,10 +88,12 @@ const photo = document.getElementById('photo');
 const takePhotoBtn = document.getElementById('takePhoto');
 const retakePhotoBtn = document.getElementById('retakePhoto');
 const switchCameraBtn = document.getElementById('switchCamera');
+const uploadPhotoBtn = document.getElementById('uploadPhoto');
 const context = canvas.getContext('2d');
 
 let currentStream = null;
 let useFrontCamera = true;
+let lastDataUrl = null;
 
 async function startCamera() {
   if (currentStream) {
@@ -80,6 +108,8 @@ async function startCamera() {
     video.style.display = 'block';
     photo.style.display = 'none';
     retakePhotoBtn.style.display = 'none';
+    uploadPhotoBtn.style.display = 'none';
+    uploadPhotoBtn.disabled = true;
     takePhotoBtn.style.display = 'inline-block';
   } catch (err) {
     alert('Nie można uruchomić kamery: ' + err.message);
@@ -87,16 +117,12 @@ async function startCamera() {
 }
 
 function takePhoto() {
-  // Ustaw proporcje pionowe 3:4 na canvasie dla selfie
-  const desiredWidth = video.videoWidth;
-  const desiredHeight = video.videoHeight;
-  
-  canvas.width = desiredWidth;
-  canvas.height = desiredHeight;
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
 
   context.save();
   context.translate(canvas.width, 0);
-  context.scale(-1, 1); // lustrzane odbicie
+  context.scale(-1, 1);
   context.drawImage(video, 0, 0, canvas.width, canvas.height);
   context.restore();
 
@@ -108,9 +134,33 @@ function takePhoto() {
   video.style.display = 'none';
   takePhotoBtn.style.display = 'none';
   retakePhotoBtn.style.display = 'inline-block';
+  uploadPhotoBtn.style.display = 'inline-block';
+  uploadPhotoBtn.disabled = false;
 
-  // Wyślij zdjęcie do Google Apps Script
-  const base64Data = dataUrl.split(',')[1];
+  lastDataUrl = dataUrl;
+}
+
+function retakePhoto() {
+  photo.style.display = 'none';
+  video.style.display = 'block';
+  retakePhotoBtn.style.display = 'none';
+  uploadPhotoBtn.style.display = 'none';
+  uploadPhotoBtn.disabled = true;
+  takePhotoBtn.style.display = 'inline-block';
+}
+
+function switchCamera() {
+  useFrontCamera = !useFrontCamera;
+  startCamera();
+}
+
+function uploadPhoto() {
+  if (!lastDataUrl) return;
+
+  uploadPhotoBtn.disabled = true;
+  uploadPhotoBtn.textContent = '⏳ Wysyłanie...';
+
+  const base64Data = lastDataUrl.split(',')[1];
   fetch('https://script.google.com/macros/s/AKfycbzR-AN27BN3fzqp78KuooT2kOuBcwCfEnoyf1YwNHOeFFVmNusqkX6d6Hnmm2sHTH3VvQ/exec', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -122,33 +172,28 @@ function takePhoto() {
   })
   .then(response => response.text())
   .then(result => {
-    if(result !== 'OK'){
-      alert('Błąd zapisu zdjęcia: ' + result);
+    if(result === 'OK'){
+      alert('🚀 Zdjęcie zostało zapisane!');
+      uploadPhotoBtn.textContent = '✅ Wysłano';
+    } else {
+      alert('❌ Błąd zapisu zdjęcia: ' + result);
+      uploadPhotoBtn.textContent = '🚀 Prześlij zdjęcie';
+      uploadPhotoBtn.disabled = false;
     }
   })
   .catch(error => {
-    alert('Błąd podczas wysyłania zdjęcia: ' + error.message);
+    alert('❌ Błąd podczas wysyłania zdjęcia: ' + error.message);
+    uploadPhotoBtn.textContent = '🚀 Prześlij zdjęcie';
+    uploadPhotoBtn.disabled = false;
   });
-}
-
-function retakePhoto() {
-  photo.style.display = 'none';
-  video.style.display = 'block';
-  retakePhotoBtn.style.display = 'none';
-  takePhotoBtn.style.display = 'inline-block';
-}
-
-function switchCamera() {
-  useFrontCamera = !useFrontCamera;
-  startCamera();
 }
 
 takePhotoBtn.addEventListener('click', takePhoto);
 retakePhotoBtn.addEventListener('click', retakePhoto);
 switchCameraBtn.addEventListener('click', switchCamera);
+uploadPhotoBtn.addEventListener('click', uploadPhoto);
 
 startCamera();
 </script>
 </body>
 </html>
-
