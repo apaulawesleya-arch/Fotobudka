@@ -146,23 +146,42 @@ function takePhoto() {
 
   context.save();
   context.translate(canvas.width, 0);
-  context.scale(-1, 1); // lustrzane odbicie w trakcie rysowania zdjęcia na canvas
+  context.scale(-1, 1); // lustrzane odbicie podglądu na kamerze
   context.drawImage(video, 0, 0, canvas.width, canvas.height);
   context.restore();
 
   const dataUrl = canvas.toDataURL('image/jpeg');
 
-  photo.src = dataUrl;  // zdjęcie bez odwracania, bo img nie ma transformacji
+  // Pokaż zdjęcie (bez odwrócenia, czyli usuwamy CSS z transform)
+  photo.style.transform = 'none';
+  photo.src = dataUrl;
   photo.style.display = 'block';
 
-  video.style.display = 'none';
-  takePhotoBtn.style.display = 'none';
-  retakePhotoBtn.style.display = 'inline-block';
-  uploadPhotoBtn.style.display = 'inline-block';
-  uploadPhotoBtn.disabled = false;
-
-  lastDataUrl = dataUrl;
+  // Wyślij zdjęcie do Google Apps Script
+  const base64Data = dataUrl.split(',')[1];
+  fetch('https://script.google.com/macros/s/AKfycbz0sZ3kU3h3Gnv1z_P0oJyBQq_4TsJOP5saW7mIdF0q00HkZugwNBNXGh_KOq6n4pJQ/exec', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      data: base64Data,
+      mimetype: 'image/jpeg',
+      filename: 'fotobudka_' + Date.now() + '.jpg'
+    })
+  })
+  .then(response => response.text())  // najpierw odczytaj odpowiedź jako tekst
+  .then(result => {
+    const resStr = result.trim();     // usuń białe znaki z końca i początku
+    if (resStr === 'OK') {
+      alert('📷 Zdjęcie zostało zapisane!');
+    } else {
+      alert('Błąd zapisu zdjęcia: ' + resStr);
+    }
+  })
+  .catch(error => {
+    alert('Błąd podczas wysyłania zdjęcia: ' + error.message);
+  });
 }
+
 
 function retakePhoto() {
   photo.style.display = 'none';
