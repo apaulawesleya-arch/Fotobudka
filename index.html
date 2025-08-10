@@ -111,7 +111,7 @@ function takePhoto() {
 
   // Wyślij zdjęcie do Google Apps Script
   const base64Data = dataUrl.split(',')[1];
-  fetch('https://script.google.com/macros/s/AKfycbz0sZ3kU3h3Gnv1z_P0oJyBQq_4TsJOP5saW7mIdF0q00HkZugwNBNXGh_KOq6n4pJQ/exec', {
+  fetch('https://script.google.com/macros/s/AKfycbzR-AN27BN3fzqp78KuooT2kOuBcwCfEnoyf1YwNHOeFFVmNusqkX6d6Hnmm2sHTH3VvQ/exec', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
