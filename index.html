@@ -199,8 +199,6 @@ function uploadPhoto() {
     if(result === 'OK'){
       alert('🚀 Zdjęcie zostało zapisane!');
       uploadPhotoBtn.textContent = '✅ Wysłano';
-    } else {
-      alert('❌ Błąd zapisu zdjęcia: ' + result);
       uploadPhotoBtn.textContent = '🚀 Prześlij zdjęcie';
       uploadPhotoBtn.disabled = false;
     }
