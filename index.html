@@ -15,7 +15,7 @@
     max-height: 60vh;
     border: 2px solid #333;
     border-radius: 8px;
-    transform: scaleX(-1); /* lustrzane odbicie podglądu */
+    transform: scaleX(-1); /* lustrzane odbicie */
   }
   #photo {
     margin-top: 20px;
@@ -23,7 +23,7 @@
     transform: none; /* zdjęcie nie jest odwrócone */
   }
   button {
-    margin: 10px 5px 0 5px;
+    margin-top: 15px;
     font-size: 18px;
     padding: 10px 20px;
     cursor: pointer;
@@ -37,7 +37,6 @@
 <video id="video" autoplay playsinline></video>
 <br/>
 <button id="takePhoto">Zrób zdjęcie</button>
-<button id="sendPhoto" disabled>Prześlij zdjęcie</button>
 
 <canvas id="canvas" style="display:none;"></canvas>
 <img id="photo" alt="Twoje zdjęcie" />
@@ -47,10 +46,7 @@ const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
 const photo = document.getElementById('photo');
 const takePhotoBtn = document.getElementById('takePhoto');
-const sendPhotoBtn = document.getElementById('sendPhoto');
 const context = canvas.getContext('2d');
-
-let lastPhotoDataUrl = null;
 
 async function startCamera() {
   try {
@@ -74,23 +70,15 @@ function takePhoto() {
   context.drawImage(video, 0, 0, canvas.width, canvas.height);
   context.restore();
 
-  lastPhotoDataUrl = canvas.toDataURL('image/jpeg');
+  const dataUrl = canvas.toDataURL('image/jpeg');
 
   // Pokaż zdjęcie w oryginalnym (nieodwróconym) formacie
   photo.style.transform = 'none'; // zdjęcie bez odbicia
-  photo.src = lastPhotoDataUrl;
+  photo.src = dataUrl;
   photo.style.display = 'block';
 
-  // Aktywuj przycisk wysłania zdjęcia
-  sendPhotoBtn.disabled = false;
-}
-
-function sendPhoto() {
-  if (!lastPhotoDataUrl) {
-    alert('Najpierw zrób zdjęcie!');
-    return;
-  }
-  const base64Data = lastPhotoDataUrl.split(',')[1];
+  // Wyślij zdjęcie do Google Apps Script
+  const base64Data = dataUrl.split(',')[1];
   fetch('https://script.google.com/macros/s/AKfycbzR-AN27BN3fzqp78KuooT2kOuBcwCfEnoyf1YwNHOeFFVmNusqkX6d6Hnmm2sHTH3VvQ/exec', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -100,11 +88,10 @@ function sendPhoto() {
       filename: 'fotobudka_' + Date.now() + '.jpg'
     })
   })
-  .then(response => response.text())
+  .then(response => response.text())   // najpierw wyciągnij tekst z odpowiedzi
   .then(result => {
     if(result === 'OK'){
       alert('📷 Zdjęcie zostało zapisane!');
-      sendPhotoBtn.disabled = true; // dezaktywuj przycisk po wysłaniu
     } else {
       alert('Błąd zapisu zdjęcia: ' + result);
     }
@@ -115,7 +102,6 @@ function sendPhoto() {
 }
 
 takePhotoBtn.addEventListener('click', takePhoto);
-sendPhotoBtn.addEventListener('click', sendPhoto);
 
 startCamera();
 </script>
