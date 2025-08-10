@@ -5,38 +5,95 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Ania&Damian weselna fotobudka</title>
 <style>
+  body {
+    background: #f8c2d7; /* jasny róż */
+    font-family: 'Arial', sans-serif;
+    color: #3a1a2a;
+    text-align: center;
+    padding: 20px;
+  }
+  h1 {
+    margin-bottom: 0;
+  }
+  p {
+    margin-top: 5px;
+    margin-bottom: 20px;
+    font-size: 1.1em;
+  }
   video, img {
     width: 320px;
     height: 480px;
     object-fit: cover;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     transform: scaleX(-1); /* odbicie lustrzane */
+  }
+  button {
+    background-color: #a82859;
+    border: none;
+    color: white;
+    padding: 12px 24px;
+    margin: 15px 10px 0 10px;
+    border-radius: 30px;
+    font-size: 1.2em;
+    cursor: pointer;
+    box-shadow: 0 3px 7px rgba(0,0,0,0.2);
+    transition: background-color 0.3s ease;
+  }
+  button:disabled {
+    background-color: #d9a6bb;
+    cursor: not-allowed;
+  }
+  button:hover:not(:disabled) {
+    background-color: #8a1f4a;
   }
 </style>
 </head>
 <body>
+
 <h1>Ania&Damian weselna fotobudka</h1>
-<p>Zrób zdjęcie i podziel się nim z nami! 🕊️</p>
+<p>Zrób zdjęcie i podziel się nim z nami! 🕊️<br>
+Po zrobieniu zdjęcia poczekaj na komunikat "Zdjęcie zapisano" — trafi ono bezpośrednio do ślubnego folderu :)</p>
 
 <video id="camera" autoplay playsinline></video>
 <br />
-<button id="snap">Zrób zdjęcie</button>
+<button id="switchCamera">🔄 Odwróć kamerę</button>
+<button id="snap">📸 Zrób zdjęcie</button>
 <br />
 <img id="photo" alt="Podgląd zdjęcia" />
 <br />
-<button id="send" disabled>Wyślij zdjęcie</button>
+<button id="send" disabled>📤 Wyślij zdjęcie</button>
 
 <script>
-const video = document.getElementById('camera');
-const photo = document.getElementById('photo');
-const snap = document.getElementById('snap');
-const send = document.getElementById('send');
-let base64Image = '';
+let video = document.getElementById('camera');
+let photo = document.getElementById('photo');
+let snap = document.getElementById('snap');
+let send = document.getElementById('send');
+let switchCameraBtn = document.getElementById('switchCamera');
 
-navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
-  .then(stream => {
-    video.srcObject = stream;
-  })
-  .catch(err => alert("Błąd dostępu do kamery: " + err));
+let base64Image = '';
+let currentStream = null;
+let useFrontCamera = true;
+
+async function startCamera() {
+  if (currentStream) {
+    currentStream.getTracks().forEach(track => track.stop());
+  }
+  try {
+    currentStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: useFrontCamera ? "user" : "environment" },
+      audio: false
+    });
+    video.srcObject = currentStream;
+  } catch (err) {
+    alert("Błąd dostępu do kamery: " + err);
+  }
+}
+
+switchCameraBtn.addEventListener('click', () => {
+  useFrontCamera = !useFrontCamera;
+  startCamera();
+});
 
 snap.addEventListener('click', () => {
   const canvas = document.createElement('canvas');
@@ -44,11 +101,12 @@ snap.addEventListener('click', () => {
   canvas.height = video.videoHeight;
   const ctx = canvas.getContext('2d');
 
-  // Odbicie lustrzane na canvas
+  // odbicie lustrzane na canvas
   ctx.translate(canvas.width, 0);
   ctx.scale(-1, 1);
 
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
   base64Image = canvas.toDataURL('image/jpeg').split(',')[1];
   photo.src = 'data:image/jpeg;base64,' + base64Image;
   send.disabled = false;
@@ -56,7 +114,10 @@ snap.addEventListener('click', () => {
 
 send.addEventListener('click', () => {
   if (!base64Image) return alert("Zrób zdjęcie najpierw!");
-  
+
+  send.disabled = true;
+  send.textContent = "Wysyłam...";
+
   fetch('https://script.google.com/macros/s/AKfycbzR-AN27BN3fzqp78KuooT2kOuBcwCfEnoyf1YwNHOeFFVmNusqkX6d6Hnmm2sHTH3VvQ/exec', {
     method: 'POST',
     body: new URLSearchParams({
@@ -66,9 +127,22 @@ send.addEventListener('click', () => {
     })
   })
   .then(res => res.text())
-  .then(text => alert(text))
-  .catch(err => alert('Błąd wysyłania: ' + err));
+  .then(text => {
+    alert(text);
+    send.disabled = false;
+    send.textContent = "📤 Wyślij zdjęcie";
+    base64Image = '';
+    photo.src = '';
+  })
+  .catch(err => {
+    alert('Błąd wysyłania: ' + err);
+    send.disabled = false;
+    send.textContent = "📤 Wyślij zdjęcie";
+  });
 });
+
+startCamera();
 </script>
+
 </body>
 </html>
