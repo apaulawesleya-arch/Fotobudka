@@ -60,6 +60,11 @@ async function startCamera() {
 }
 
 function takePhoto() {
+  if (video.videoWidth === 0 || video.videoHeight === 0) {
+    alert('Kamera jeszcze się uruchamia, spróbuj za chwilę.');
+    return;
+  }
+  
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
 
@@ -71,7 +76,7 @@ function takePhoto() {
 
   const dataUrl = canvas.toDataURL('image/jpeg');
 
-  // Wyświetl zdjęcie w elemencie img z lustrzanym odbiciem (CSS z transform: scaleX(-1))
+  // Pokaż podgląd zdjęcia dopiero po zrobieniu
   photo.src = dataUrl;
   photo.style.display = 'block';
 
