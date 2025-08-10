@@ -2,25 +2,35 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>Ania&Damian weselna fotobudka</title>
 <style>
-  body {
+  html, body {
+    margin: 0; padding: 0; height: 100%;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    text-align: center;
-    margin: 10px;
     background: #f9e0e7;
     color: #333;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 10px;
+    box-sizing: border-box;
+    min-height: 100vh;
   }
   h1 {
     color: #d6336c;
     margin-bottom: 5px;
     font-size: 1.8rem;
+    text-align: center;
   }
   p {
     font-size: 1.1rem;
     margin-top: 0;
     margin-bottom: 15px;
+    text-align: center;
   }
   video {
     width: 100vw;
@@ -29,7 +39,7 @@
     border: 3px solid #d6336c;
     border-radius: 12px;
     object-fit: cover;
-    transform: scaleX(-1);
+    transform: scaleX(-1); /* lustrzane odbicie */
     box-shadow: 0 4px 10px rgba(214, 51, 108, 0.4);
     transition: all 0.3s ease;
   }
@@ -41,12 +51,19 @@
     border-radius: 12px;
     object-fit: contain;
     box-shadow: 0 4px 10px rgba(214, 51, 108, 0.4);
-    transition: all 0.3s ease;
     margin-top: 20px;
     display: none;
+    /* **UWAGA** brak transform: scaleX, zdjęcie pokazujemy normalnie */
+  }
+  #buttonsContainer {
+    margin-top: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
   }
   button {
-    margin: 15px 10px 0 10px;
+    margin: 0;
     font-size: 20px;
     padding: 14px 32px;
     cursor: pointer;
@@ -69,13 +86,6 @@
   button:hover:not(:disabled) {
     background-color: #b42b57;
     box-shadow: 0 6px 12px rgba(180, 43, 87, 0.8);
-  }
-  #buttonsContainer {
-    margin-top: 15px;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
   }
 </style>
 </head>
@@ -136,13 +146,13 @@ function takePhoto() {
 
   context.save();
   context.translate(canvas.width, 0);
-  context.scale(-1, 1); // lustrzane odbicie przy robieniu zdjęcia
+  context.scale(-1, 1); // lustrzane odbicie w trakcie rysowania zdjęcia na canvas
   context.drawImage(video, 0, 0, canvas.width, canvas.height);
   context.restore();
 
   const dataUrl = canvas.toDataURL('image/jpeg');
 
-  photo.src = dataUrl;
+  photo.src = dataUrl;  // zdjęcie bez odwracania, bo img nie ma transformacji
   photo.style.display = 'block';
 
   video.style.display = 'none';
