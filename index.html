@@ -1,148 +1,110 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Ania & Damian – Weselna Fotobudka</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background-color: #fff0f5;
-      padding: 2em;
-    }
-    h1 {
-      font-size: 2em;
-      margin-bottom: 0.3em;
-    }
-    p {
-      font-size: 1.2em;
-      margin-bottom: 1.5em;
-    }
-    video {
-      border: 4px solid #e91e63;
-      border-radius: 10px;
-      width: 90%;
-      max-width: 400px;
-      height: auto;
-      margin-bottom: 1em;
-    }
-    canvas {
-      display: none;
-      margin-top: 1em;
-    }
-    button {
-      padding: 12px 25px;
-      font-size: 1.1em;
-      background-color: #e91e63;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      margin: 0.5em;
-    }
-    button:hover {
-      background-color: #d81b60;
-    }
-    #downloadLink {
-      display: none;
-      margin-top: 1em;
-      font-size: 1.1em;
-      text-decoration: none;
-      color: #e91e63;
-      font-weight: bold;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ania & Damian - Weselna Fotobudka</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            background-color: #f8f0f8;
+        }
+        h1 {
+            color: #b30059;
+        }
+        video, canvas {
+            max-width: 100%;
+            height: auto;
+            transform: scaleX(-1); /* Lustrzane odbicie */
+        }
+        #buttons {
+            margin-top: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            background-color: #b30059;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #ff1a75;
+        }
+    </style>
 </head>
 <body>
-  <h1>Ania & Damian – Weselna Fotobudka 📸</h1>
-  <p>Zrób zdjęcie i podziel się nim z nami! 🕊️</p>
 
-  <video id="video" autoplay playsinline></video>
-  <br>
-  <button onclick="takePhoto()">📸 Zrób zdjęcie</button>
-  <button onclick="switchCamera()">🔄 Przełącz kamerę</button>
-  <button onclick="toggleFlash()">💡 Lampa: <span id="flashStatus">OFF</span></button>
+<h1>Ania & Damian - Weselna Fotobudka</h1>
+<p>Zrób zdjęcie i podziel się nim z nami! 🕊️</p>
 
-  <canvas id="canvas" width="1280" height="720" style="display: none; max-width: 90%; border: 8px solid #e91e63; border-radius: 12px; box-shadow: 0 0 15px rgba(0,0,0,0.3); margin-top: 1em;"></canvas>
-  <br>
-  <a id="downloadLink">📥 Pobierz zdjęcie</a>
-  <br>
-  <button onclick="goToForm()">📤 Prześlij zdjęcie do formularza</button>
+<video id="video" autoplay playsinline></video>
+<canvas id="canvas" style="display:none;"></canvas>
 
-  <script>
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const downloadLink = document.getElementById('downloadLink');
-    const flashStatus = document.getElementById('flashStatus');
+<div id="buttons">
+    <button onclick="takePhoto()">📸 Zrób zdjęcie</button>
+    <button onclick="switchCamera()">🔄 Zmień kamerę</button>
+</div>
 
-    let currentStream;
-    let currentCamera = 'environment';
-    let flashOn = false;
+<script>
+let video = document.getElementById('video');
+let canvas = document.getElementById('canvas');
+let context = canvas.getContext('2d');
+let usingFrontCamera = true;
+let stream;
 
-    async function startCamera() {
-      if (currentStream) {
-        currentStream.getTracks().forEach(track => track.stop());
-      }
-
-      const constraints = {
+// Start kamery
+async function startCamera() {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+    stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: currentCamera,
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+            facingMode: usingFrontCamera ? 'user' : 'environment'
         }
-      };
+    });
+    video.srcObject = stream;
+}
 
-      try {
-        currentStream = await navigator.mediaDevices.getUserMedia(constraints);
-        video.srcObject = currentStream;
-        await video.play();
-      } catch (err) {
-        alert("Nie udało się uzyskać dostępu do kamery 😢");
-        console.error(err);
-      }
-    }
+function switchCamera() {
+    usingFrontCamera = !usingFrontCamera;
+    startCamera();
+}
 
-    function switchCamera() {
-      currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
-      startCamera();
-    }
+function takePhoto() {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.style.display = 'block';
 
-    function toggleFlash() {
-      const videoTrack = currentStream?.getVideoTracks()[0];
-      const capabilities = videoTrack?.getCapabilities?.();
-      if (!capabilities || !capabilities.torch) {
-        alert("Twoje urządzenie nie obsługuje lampy błyskowej");
-        return;
-      }
+    context.save();
+    context.translate(canvas.width, 0);
+    context.scale(-1, 1); // Lustrzane odbicie
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    context.restore();
 
-      flashOn = !flashOn;
-      videoTrack.applyConstraints({ advanced: [{ torch: flashOn }] });
-      flashStatus.textContent = flashOn ? 'ON' : 'OFF';
-    }
+    const dataUrl = canvas.toDataURL('image/jpeg');
+    const base64Data = dataUrl.split(',')[1];
 
-    function takePhoto() {
-      const context = canvas.getContext('2d');
-      canvas.style.display = 'block';
+    fetch("https://script.google.com/macros/s/AKfycbyjAVJMTW6U9KDyLr1VrhEmS5jvy0Xr9wDwgss_KTgAvpL6uTndeXxFCiwWiOBByuMO/exec", {
+        method: "POST",
+        body: new URLSearchParams({
+            data: base64Data,
+            mimetype: "image/jpeg",
+            filename: "fotobudka_" + Date.now() + ".jpg"
+        })
+    })
+    .then(r => r.text())
+    .then(res => {
+        alert("📷 Zdjęcie zapisane!");
+    })
+    .catch(err => console.error(err));
+}
 
-// Ustawiamy proporcje kamery
-canvas.width = video.videoWidth;
-canvas.height = video.videoHeight;
+startCamera();
+</script>
 
-// Rysujemy zdjęcie w pełnej jakości
-context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      const dataUrl = canvas.toDataURL('image/png');
-      downloadLink.href = dataUrl;
-      downloadLink.download = 'fotobudka.png';
-      downloadLink.style.display = 'inline-block';
-    }
-
-    function goToForm() {
-      window.open("https://docs.google.com/forms/d/e/1FAIpQLSdJdysTEt9T6D6xpV8Pttmb2sHyH3wyPmZdgGiWTvn1DU-V7g/viewform", "_blank");
-    }
-
-    window.addEventListener('load', startCamera);
-  </script>
 </body>
 </html>
