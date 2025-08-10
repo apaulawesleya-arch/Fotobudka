@@ -60,11 +60,6 @@ async function startCamera() {
 }
 
 function takePhoto() {
-  if (video.videoWidth === 0 || video.videoHeight === 0) {
-    alert('Kamera jeszcze się uruchamia, spróbuj za chwilę.');
-    return;
-  }
-  
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
 
@@ -76,13 +71,13 @@ function takePhoto() {
 
   const dataUrl = canvas.toDataURL('image/jpeg');
 
-  // Pokaż podgląd zdjęcia dopiero po zrobieniu
+  // Wyświetl zdjęcie w elemencie img z lustrzanym odbiciem (CSS z transform: scaleX(-1))
   photo.src = dataUrl;
   photo.style.display = 'block';
 
   // Wyślij zdjęcie do Google Apps Script
   const base64Data = dataUrl.split(',')[1];
-  fetch('https://script.google.com/macros/s/AKfycbzR-AN27BN3fzqp78KuooT2kOuBcwCfEnoyf1YwNHOeFFVmNusqkX6d6Hnmm2sHTH3VvQ/exec', {
+  fetch('https://script.google.com/macros/s/AKfycbz0sZ3kU3h3Gnv1z_P0oJyBQq_4TsJOP5saW7mIdF0q00HkZugwNBNXGh_KOq6n4pJQ/exec', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
