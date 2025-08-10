@@ -195,17 +195,24 @@ function uploadPhoto() {
     })
   })
   .then(response => response.text())
-  .then(result => {
+  .then(text => {
+    const result = text.trim();
     if(result === 'OK'){
       alert('🚀 Zdjęcie zostało zapisane!');
       uploadPhotoBtn.textContent = '✅ Wysłano';
+    } else {
+      alert('❌ Błąd zapisu zdjęcia: ' + result);
       uploadPhotoBtn.textContent = '🚀 Prześlij zdjęcie';
       uploadPhotoBtn.disabled = false;
     }
   })
- 
+  .catch(error => {
+    alert('❌ Błąd podczas wysyłania zdjęcia: ' + error.message);
+    uploadPhotoBtn.textContent = '🚀 Prześlij zdjęcie';
+    uploadPhotoBtn.disabled = false;
   });
 }
+
 
 takePhotoBtn.addEventListener('click', takePhoto);
 retakePhotoBtn.addEventListener('click', retakePhoto);
