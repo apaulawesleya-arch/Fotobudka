@@ -2,139 +2,59 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Ania&Damian weselna fotobudka</title>
 <style>
-  html, body {
-    margin: 0; padding: 0; height: 100%;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f9e0e7;
-    color: #333;
-  }
   body {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 10px;
-    box-sizing: border-box;
-    min-height: 100vh;
-  }
-  h1 {
-    color: #d6336c;
-    margin-bottom: 5px;
-    font-size: 1.8rem;
+    font-family: Arial, sans-serif;
     text-align: center;
+    margin: 20px;
   }
-  p {
-    font-size: 1.1rem;
-    margin-top: 0;
-    margin-bottom: 15px;
-    text-align: center;
-  }
-  video {
-    width: 100vw;
-    max-width: 400px;
-    height: auto;
-    border: 3px solid #d6336c;
-    border-radius: 12px;
-    object-fit: cover;
+  video, canvas, #photo {
+    max-width: 90vw;
+    max-height: 60vh;
+    border: 2px solid #333;
+    border-radius: 8px;
     transform: scaleX(-1); /* lustrzane odbicie */
-    box-shadow: 0 4px 10px rgba(214, 51, 108, 0.4);
-    transition: all 0.3s ease;
   }
   #photo {
-    width: 100vw;
-    max-width: 400px;
-    height: auto;
-    border: 3px solid #d6336c;
-    border-radius: 12px;
-    object-fit: contain;
-    box-shadow: 0 4px 10px rgba(214, 51, 108, 0.4);
     margin-top: 20px;
     display: none;
-    /* **UWAGA** brak transform: scaleX, zdjęcie pokazujemy normalnie */
-  }
-  #buttonsContainer {
-    margin-top: 15px;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
+    transform: none; /* zdjęcie nie jest odwrócone */
   }
   button {
-    margin: 0;
-    font-size: 20px;
-    padding: 14px 32px;
+    margin-top: 15px;
+    font-size: 18px;
+    padding: 10px 20px;
     cursor: pointer;
-    border: none;
-    border-radius: 30px;
-    background-color: #d6336c;
-    color: white;
-    font-weight: 600;
-    box-shadow: 0 4px 8px rgba(214, 51, 108, 0.6);
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
-    user-select: none;
-    min-width: 140px;
-  }
-  button:disabled {
-    background-color: #f1cdd9;
-    box-shadow: none;
-    cursor: not-allowed;
-    color: #a07a8e;
-  }
-  button:hover:not(:disabled) {
-    background-color: #b42b57;
-    box-shadow: 0 6px 12px rgba(180, 43, 87, 0.8);
   }
 </style>
 </head>
 <body>
 <h1>Ania&amp;Damian weselna fotobudka</h1>
-<p>Zrób zdjęcie i podziel się nim z nami! 🕊️📸</p>
+<p>Zrób zdjęcie i podziel się nim z nami! 🕊️</p>
 
 <video id="video" autoplay playsinline></video>
-<img id="photo" alt="Twoje zdjęcie" />
-
-<div id="buttonsContainer">
-  <button id="switchCamera" title="Przełącz kamerę">🔄 Przełącz kamerę</button>
-  <button id="takePhoto">📷 Zrób zdjęcie</button>
-  <button id="retakePhoto" style="display:none;">🔄 Zrób ponownie</button>
-  <button id="uploadPhoto" style="display:none;" disabled>🚀 Prześlij zdjęcie</button>
-</div>
+<br/>
+<button id="takePhoto">Zrób zdjęcie</button>
 
 <canvas id="canvas" style="display:none;"></canvas>
+<img id="photo" alt="Twoje zdjęcie" />
 
 <script>
 const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
 const photo = document.getElementById('photo');
 const takePhotoBtn = document.getElementById('takePhoto');
-const retakePhotoBtn = document.getElementById('retakePhoto');
-const switchCameraBtn = document.getElementById('switchCamera');
-const uploadPhotoBtn = document.getElementById('uploadPhoto');
 const context = canvas.getContext('2d');
 
-let currentStream = null;
-let useFrontCamera = true;
-let lastDataUrl = null;
-
 async function startCamera() {
-  if (currentStream) {
-    currentStream.getTracks().forEach(track => track.stop());
-  }
   try {
-    currentStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: useFrontCamera ? 'user' : 'environment' },
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user' },
       audio: false
     });
-    video.srcObject = currentStream;
-    video.style.display = 'block';
-    photo.style.display = 'none';
-    retakePhotoBtn.style.display = 'none';
-    uploadPhotoBtn.style.display = 'none';
-    uploadPhotoBtn.disabled = true;
-    takePhotoBtn.style.display = 'inline-block';
+    video.srcObject = stream;
   } catch (err) {
     alert('Nie można uruchomić kamery: ' + err.message);
   }
@@ -146,20 +66,20 @@ function takePhoto() {
 
   context.save();
   context.translate(canvas.width, 0);
-  context.scale(-1, 1); // lustrzane odbicie podglądu na kamerze
+  context.scale(-1, 1); // lustrzane odbicie podglądu
   context.drawImage(video, 0, 0, canvas.width, canvas.height);
   context.restore();
 
   const dataUrl = canvas.toDataURL('image/jpeg');
 
-  // Pokaż zdjęcie (bez odwrócenia, czyli usuwamy CSS z transform)
-  photo.style.transform = 'none';
+  // Pokaż zdjęcie w oryginalnym (nieodwróconym) formacie
+  photo.style.transform = 'none'; // zdjęcie bez odbicia
   photo.src = dataUrl;
   photo.style.display = 'block';
 
   // Wyślij zdjęcie do Google Apps Script
   const base64Data = dataUrl.split(',')[1];
-  fetch('https://script.google.com/macros/s/AKfycbz0sZ3kU3h3Gnv1z_P0oJyBQq_4TsJOP5saW7mIdF0q00HkZugwNBNXGh_KOq6n4pJQ/exec', {
+  fetch('https://script.google.com/macros/s/AKfycbzR-AN27BN3fzqp78KuooT2kOuBcwCfEnoyf1YwNHOeFFVmNusqkX6d6Hnmm2sHTH3VvQ/exec', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
@@ -168,13 +88,12 @@ function takePhoto() {
       filename: 'fotobudka_' + Date.now() + '.jpg'
     })
   })
-  .then(response => response.text())  // najpierw odczytaj odpowiedź jako tekst
+  .then(response => response.text())   // najpierw wyciągnij tekst z odpowiedzi
   .then(result => {
-    const resStr = result.trim();     // usuń białe znaki z końca i początku
-    if (resStr === 'OK') {
+    if(result === 'OK'){
       alert('📷 Zdjęcie zostało zapisane!');
     } else {
-      alert('Błąd zapisu zdjęcia: ' + resStr);
+      alert('Błąd zapisu zdjęcia: ' + result);
     }
   })
   .catch(error => {
@@ -182,56 +101,7 @@ function takePhoto() {
   });
 }
 
-
-function retakePhoto() {
-  photo.style.display = 'none';
-  video.style.display = 'block';
-  retakePhotoBtn.style.display = 'none';
-  uploadPhotoBtn.style.display = 'none';
-  uploadPhotoBtn.disabled = true;
-  takePhotoBtn.style.display = 'inline-block';
-}
-
-function switchCamera() {
-  useFrontCamera = !useFrontCamera;
-  startCamera();
-}
-
-function uploadPhoto() {
-  if (!lastDataUrl) return;
-
-  uploadPhotoBtn.disabled = true;
-  uploadPhotoBtn.textContent = '⏳ Wysyłanie...';
-
-  const base64Data = lastDataUrl.split(',')[1];
-  
-  fetch('https://script.google.com/macros/s/AKfycbz0sZ3kU3h3Gnv1z_P0oJyBQq_4TsJOP5saW7mIdF0q00HkZugwNBNXGh_KOq6n4pJQ/exec', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-  body: new URLSearchParams({
-    data: base64Data,
-    mimetype: 'image/jpeg',
-    filename: 'fotobudka_' + Date.now() + '.jpg'
-  })
-})
-.then(response => response.text())  // <-- tutaj pobierasz tekst z odpowiedzi
-.then(result => {
-  if(result === 'OK'){
-    alert('📷 Zdjęcie zostało zapisane!');
-  } else {
-    alert('Błąd zapisu zdjęcia: ' + result);
-  }
-})
-.catch(error => {
-  alert('Błąd podczas wysyłania zdjęcia: ' + error.message);
-});
-
-}
-
 takePhotoBtn.addEventListener('click', takePhoto);
-retakePhotoBtn.addEventListener('click', retakePhoto);
-switchCameraBtn.addEventListener('click', switchCamera);
-uploadPhotoBtn.addEventListener('click', uploadPhoto);
 
 startCamera();
 </script>
