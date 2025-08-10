@@ -203,10 +203,7 @@ function uploadPhoto() {
       uploadPhotoBtn.disabled = false;
     }
   })
-  .catch(error => {
-    alert('❌ Błąd podczas wysyłania zdjęcia: ' + error.message);
-    uploadPhotoBtn.textContent = '🚀 Prześlij zdjęcie';
-    uploadPhotoBtn.disabled = false;
+ 
   });
 }
 
